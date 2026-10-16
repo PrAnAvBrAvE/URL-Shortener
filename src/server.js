@@ -1,32 +1,18 @@
-import express from "express"
 import 'dotenv/config';
 import mongoose from "mongoose";
-import pinoHttp from "pino-http";
-import router from "./routes/url.routes.js";
-import { errorHandler } from "./middleware/error.middleware.js";
+
+import app from "./app.js"
 import logger from "./utils/logger.js";
 
-const app = express();
 const port = process.env.PORT || 3000
-
-app.use(express.json())
-
-app.use(pinoHttp({
-    logger,
-    customLogLevel(req, res, err) {
-        if (err || res.statusCode >= 500) return "error";
-        if (res.statusCode >= 400) return "warn";
-        return "info";
-    }
-}))
-
-app.use(router)
-app.use(errorHandler)
 
 async function startServer() {
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        if (!process.env.MONGODB_URI) {
+            throw new Error("MONGODB_URI is not configured");
+        }
 
+        await mongoose.connect(process.env.MONGODB_URI);
         logger.info("Successfully connected to MongoDB");
 
         app.listen(port, () => {
