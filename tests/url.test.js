@@ -116,4 +116,84 @@ describe("URL Shortener API", () => {
       totalPages: 2
     });
   });
+
+  
+  test("POST /api/urls rejects a missing originalUrl", async () => {
+    const response = await request(app)
+      .post("/api/urls")
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      "originalUrl is required and must be a non-empty string"
+    );
+  });
+
+  test("POST /api/urls rejects an empty originalUrl", async () => {
+    const response = await request(app)
+      .post("/api/urls")
+      .send({ originalUrl: "   " });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      "originalUrl is required and must be a non-empty string"
+    );
+  });
+
+  test("POST /api/urls rejects a non-string originalUrl", async () => {
+    const response = await request(app)
+      .post("/api/urls")
+      .send({ originalUrl: 123 });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      "originalUrl is required and must be a non-empty string"
+    );
+  });
+
+  test("POST /api/urls rejects unsupported URL protocols", async () => {
+    const response = await request(app)
+      .post("/api/urls")
+      .send({ originalUrl: "ftp://example.com/file" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      "Only HTTP and HTTPS URLs are supported"
+    );
+  });
+
+  test("POST /api/urls rejects malformed JSON", async () => {
+    const response = await request(app)
+      .post("/api/urls")
+      .set("Content-Type", "application/json")
+      .send('{"originalUrl":');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({
+      success: false,
+      status: 400,
+      message: "Malformed JSON request body"
+    });
+  });
+
+  test("GET /api/urls rejects page zero", async () => {
+    const response = await request(app)
+      .get("/api/urls?page=0&limit=10");
+
+    expect(response.status).toBe(400);
+  });
+
+  test("GET /api/urls rejects a limit greater than 100", async () => {
+    const response = await request(app)
+      .get("/api/urls?page=1&limit=101");
+
+    expect(response.status).toBe(400);
+  });
+
+  test("GET /api/urls rejects non-numeric pagination values", async () => {
+    const response = await request(app)
+      .get("/api/urls?page=abc&limit=xyz");
+
+    expect(response.status).toBe(400);
+  });
 });
