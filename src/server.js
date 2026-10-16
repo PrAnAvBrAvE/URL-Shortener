@@ -2,12 +2,14 @@ import express from "express"
 import 'dotenv/config';
 import mongoose from "mongoose";
 import router from "./routes/url.routes.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 const port = process.env.PORT || 3000
 
 app.use(express.json())
 app.use(router)
+app.use(errorHandler)
 
 async function startServer() {
     try {
