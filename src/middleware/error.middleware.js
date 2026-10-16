@@ -1,8 +1,10 @@
+import logger from "../utils/logger.js";
+
 export const errorHandler = (err, req, res, next) => {
     const statuscode = err.statusCode || 500;
-    const message = statuscode === 500 ? "Internal Server Error" : err.message || "Request failed"
+    const message = statuscode >= 500 ? "Internal Server Error" : err.message || "Request failed"
 
-    console.error(`Error ${statuscode} - ${message}`)
+    logger.error(`Error ${statuscode} - ${message}`)
 
     res.status(statuscode).json({
         success: false,
